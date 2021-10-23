@@ -1,29 +1,48 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
-import { Book } from './book.model';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Put,
+  Post,
+  Query,
+} from '@nestjs/common';
+import { Book } from './book.entity';
 import { BooksService } from './books.service';
 import { CreateBookDto } from './dto/create-book.dto';
+import { GetBooksFilterDto } from './dto/get-book-filter.dto';
+import { UpdateBookDto } from './dto/update-book.dto';
 
 @Controller('books')
 export class BooksController {
   constructor(private booksService: BooksService) {}
 
-  @Get()
-  getAllBooks(): Book[] {
-    return this.booksService.getAllBooks();
+  @Post()
+  createBook(@Body() createBookDto: CreateBookDto): Promise<Book> {
+    return this.booksService.createBook(createBookDto);
   }
 
   @Get('/:id')
-  getBookById(@Param('id') id: string): Book {
+  getBookById(@Param('id') id: string): Promise<Book> {
     return this.booksService.getBookById(id);
   }
 
   @Delete('/:id')
-  deleteTask(@Param('id') id: string): void {
-    return this.booksService.deleteTask(id);
+  deleteBook(@Param('id') id: string): Promise<void> {
+    return this.booksService.deleteBook(id);
   }
 
-  @Post()
-  createBook(@Body() createBookDto: CreateBookDto): Book {
-    return this.booksService.createBook(createBookDto);
+  @Put('/:id')
+  updateBook(
+    @Param('id') id: string,
+    @Body() updateBookDto: UpdateBookDto,
+  ): Promise<Book> {
+    return this.booksService.updateBook(id, updateBookDto);
+  }
+
+  @Get()
+  getBooks(@Query() filterDto: GetBooksFilterDto): Promise<Book[]> {
+    return this.booksService.getBooks(filterDto);
   }
 }

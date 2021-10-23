@@ -1,37 +1,57 @@
-import { Injectable } from '@nestjs/common';
-import { Book } from './book.model';
-import { v4 as uuid } from 'uuid';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Book } from './book.entity';
+import { BooksRepository } from './books.repository';
 import { CreateBookDto } from './dto/create-book.dto';
+import { GetBooksFilterDto } from './dto/get-book-filter.dto';
+import { UpdateBookDto } from './dto/update-book.dto';
 
 @Injectable()
 export class BooksService {
-  private books: Book[] = [];
+  constructor(
+    @InjectRepository(BooksRepository)
+    private booksRepository: BooksRepository,
+  ) {}
 
-  getAllBooks(): Book[] {
-    return this.books;
+  createBook(createBookDto: CreateBookDto): Promise<Book> {
+    return this.booksRepository.createBook(createBookDto);
   }
 
-  getBookById(id: string): Book {
-    return this.books.find((book) => book.id === id);
+  getBooks(filterDto: GetBooksFilterDto): Promise<Book[]> {
+    return this.booksRepository.getTasks(filterDto);
   }
 
-  createBook(createBookDto: CreateBookDto): Book {
+  async getBookById(id: string): Promise<Book> {
+    const found = await this.booksRepository.findOne(id);
+
+    if (!found) {
+      throw new NotFoundException(`Book with ID ${id} not found`);
+    }
+
+    return found;
+  }
+
+  async deleteBook(id: string): Promise<void> {
+    const result = await this.booksRepository.delete(id);
+
+    if (result.affected === 0) {
+      throw new NotFoundException(`Book with ID ${id} not found`);
+    }
+  }
+
+  async updateBook(id, updateBookDto: UpdateBookDto): Promise<Book> {
+    const book = await this.getBookById(id);
     const { title, author, country, publishing_company, edition } =
-      createBookDto;
-    const book: Book = {
-      id: uuid(),
-      title,
-      author,
-      country,
-      publishing_company,
-      edition,
-    };
+      updateBookDto;
 
-    this.books.push(book);
+    book.title = title;
+    book.author = author;
+    book.country = country;
+    book.publishing_company = publishing_company;
+    book.edition = edition;
+
+    await this.booksRepository.save(book);
+
     return book;
-  }
-
-  deleteTask(id: string): void {
-    this.books = this.books.filter((book) => book.id !== id);
   }
 }

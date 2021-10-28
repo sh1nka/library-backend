@@ -28,7 +28,22 @@ export class BooksRepository extends Repository<Book> {
     const query = this.createQueryBuilder('book');
 
     if (title) {
-      query.andWhere('book.title = :title', { title });
+      query.andWhere('LOWER(book.title) = LOWER(:title)', { title });
+    }
+
+    if (author) {
+      query.andWhere('LOWER(book.author) = LOWER(:author)', { author });
+    }
+
+    if (country) {
+      query.andWhere('LOWER(book.country) = LOWER(:country)', { country });
+    }
+
+    if (publishing_company) {
+      query.andWhere(
+        'LOWER(book.publishing_company) = LOWER(:publishing_company)',
+        { publishing_company },
+      );
     }
 
     const books = await query.getMany();

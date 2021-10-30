@@ -1,4 +1,5 @@
-import { NotFoundException } from '@nestjs/common';
+import { InternalServerErrorException, Logger } from '@nestjs/common';
+import { User } from 'src/auth/user.entity';
 import { EntityRepository, Repository } from 'typeorm';
 import { Book } from './book.entity';
 import { CreateBookDto } from './dto/create-book.dto';
@@ -6,6 +7,7 @@ import { GetBooksFilterDto } from './dto/get-book-filter.dto';
 
 @EntityRepository(Book)
 export class BooksRepository extends Repository<Book> {
+  private logger = new Logger('BooksRepository', { timestamp: true });
   async createBook(createBookDto: CreateBookDto): Promise<Book> {
     const { title, author, country, publishing_company, edition } =
       createBookDto;
@@ -46,8 +48,12 @@ export class BooksRepository extends Repository<Book> {
       );
     }
 
-    const books = await query.getMany();
-
-    return books;
+    try {
+      const books = await query.getMany();
+      return books;
+    } catch (error) {
+      this.logger.error(`Failed to get books`);
+      throw new InternalServerErrorException();
+    }
   }
 }

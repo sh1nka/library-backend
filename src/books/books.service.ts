@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { User } from 'src/auth/user.entity';
 import { Book } from './book.entity';
 import { BooksRepository } from './books.repository';
 import { CreateBookDto } from './dto/create-book.dto';

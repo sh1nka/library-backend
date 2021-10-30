@@ -8,8 +8,11 @@ import {
   Post,
   Query,
   UseGuards,
+  Logger,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { GetUser } from 'src/auth/get-user.decorator';
+import { User } from 'src/auth/user.entity';
 import { Book } from './book.entity';
 import { BooksService } from './books.service';
 import { CreateBookDto } from './dto/create-book.dto';
@@ -19,11 +22,30 @@ import { UpdateBookDto } from './dto/update-book.dto';
 @Controller('books')
 @UseGuards(AuthGuard())
 export class BooksController {
+  private logger = new Logger('BooksController');
+
   constructor(private booksService: BooksService) {}
 
   @Post()
-  createBook(@Body() createBookDto: CreateBookDto): Promise<Book> {
+  createBook(
+    @Body() createBookDto: CreateBookDto,
+    @GetUser() user: User,
+  ): Promise<Book> {
+    this.logger.verbose(
+      `"User ${user.username}" creating a book. Data: ${JSON.stringify(
+        createBookDto,
+      )}`,
+    );
     return this.booksService.createBook(createBookDto);
+  }
+
+  @Get()
+  getBooks(
+    @Query() filterDto: GetBooksFilterDto,
+    @GetUser() user: User,
+  ): Promise<Book[]> {
+    this.logger.verbose(`"User ${user.username}" retrieving all tasks`);
+    return this.booksService.getBooks(filterDto);
   }
 
   @Get('/:id')
@@ -42,10 +64,5 @@ export class BooksController {
     @Body() updateBookDto: UpdateBookDto,
   ): Promise<Book> {
     return this.booksService.updateBook(id, updateBookDto);
-  }
-
-  @Get()
-  getBooks(@Query() filterDto: GetBooksFilterDto): Promise<Book[]> {
-    return this.booksService.getBooks(filterDto);
   }
 }
